@@ -1,10 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const mysql = require('mysql2/promise');
 
 // create and config server
 const server = express();
 server.use(cors());
-server.use(express.json());
+server.use(express.json({ limit: '50mb' }));
+
+async function connectDB() {
+  const conection = await mysql.createConnection({
+    host: 'sql.freedb.tech',
+    user: 'freedb_team3',
+    password: '55g#UTjMRp#Ekwb',
+    database: 'freedb_netflix'
+  })
+  conection.connect();
+  return conection;
+}
 
 const fakeMovies = [
   {
@@ -43,18 +55,64 @@ const fakeMovies = [
   }
 ];
 
-//endpoint
-server.get("/movies", (req, res)=>{
-  res.status(200).json({
-    success: true,
-    movies:  fakeMovies
-  })
-});
-
-
-
 // init express aplication
 const serverPort = 4000;
 server.listen(serverPort, () => {
   console.log(`Server listening at http://localhost:${serverPort}`);
+});
+
+
+
+// ENPOINTS
+// server.get("/movies", (req, res)=>{
+//   res.status(200).json({
+//     success: true,
+//     movies:  fakeMovies
+//   })
+// });
+
+
+// server.get("/movies", async (req, res)=>{
+//   // crear el sql
+//   const connection = await connectDB();
+//   const sqlSelect = 'SELECT * FROM movies';
+//   // ejectuar el sql en la base de datos
+//   const [result, fields] = await connection.query(sqlSelect);
+//   console.log(result);
+//   console.log(fields); 
+// });
+
+// connectDB();
+
+server.get("/movies", async (req, res)=>{
+  try {
+    // crear el sql
+    const connection = await connectDB();
+    const sqlSelect = 'SELECT * FROM movies';
+    // ejectuar el sql en la base de datos
+    const [result, fields] = await connection.query(sqlSelect);
+    console.log(result);
+    console.log(fields); 
+    connection.end();
+
+    if (result.length === 0) {
+      res.status(404).json({
+        status: 'error',
+        message: 'No se encontraron películas'
+      })
+    } else {
+      res.status(200).json({
+        success: true,
+        // movies: result.push(fakemovies)
+        movies: result
+      })
+    }
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      status: 'error',
+      message: error
+    })
+  };
 });
