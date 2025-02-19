@@ -86,13 +86,13 @@ server.listen(serverPort, () => {
 
 server.get("/movies", async (req, res)=>{
   try {
+    console.log(req.query.genre);
+    console.log(req.query.sort);
     // crear el sql
     const connection = await connectDB();
     const sqlSelect = 'SELECT * FROM movies';
     // ejectuar el sql en la base de datos
     const [result, fields] = await connection.query(sqlSelect);
-    console.log(result);
-    console.log(fields); 
     connection.end();
 
     if (result.length === 0) {
@@ -116,3 +116,4 @@ server.get("/movies", async (req, res)=>{
     })
   };
 });
+
