@@ -88,11 +88,26 @@ server.get("/movies", async (req, res)=>{
   try {
     console.log(req.query.genre);
     console.log(req.query.sort);
-    // crear el sql
+
+    const genreFilterParam = req.query.genre;
+    const sortFilterParam = req.query.sort; // asc, desc
+
     const connection = await connectDB();
-    const sqlSelect = 'SELECT * FROM movies';
+
+    // condicional: si genreFilterParam tiene algo, mandame una query, si no, la otra
+    let sqlSelect;
+
+    // crear el sql
+    if (genreFilterParam === '') {
+      sqlSelect = `SELECT * FROM movies ORDER BY title ${sortFilterParam}`;
+    } else {
+      sqlSelect = `SELECT * FROM movies WHERE genre = ? ORDER BY title ${sortFilterParam}`;
+    };
+
+   
+
     // ejectuar el sql en la base de datos
-    const [result, fields] = await connection.query(sqlSelect);
+    const [result, fields] = await connection.query(sqlSelect, [genreFilterParam]); //[genreFilterParam]?
     connection.end();
 
     if (result.length === 0) {
