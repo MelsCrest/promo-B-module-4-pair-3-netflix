@@ -6,6 +6,7 @@ const mysql = require('mysql2/promise');
 const server = express();
 server.use(cors());
 server.use(express.json({ limit: '50mb' }));
+server.set('view engine', 'ejs');
 
 async function connectDB() {
   const conection = await mysql.createConnection({
@@ -61,8 +62,6 @@ server.listen(serverPort, () => {
   console.log(`Server listening at http://localhost:${serverPort}`);
 });
 
-
-
 // ENPOINTS
 // server.get("/movies", (req, res)=>{
 //   res.status(200).json({
@@ -104,10 +103,8 @@ server.get("/movies", async (req, res)=>{
       sqlSelect = `SELECT * FROM movies WHERE genre = ? ORDER BY title ${sortFilterParam}`;
     };
 
-   
-
     // ejectuar el sql en la base de datos
-    const [result, fields] = await connection.query(sqlSelect, [genreFilterParam]); //[genreFilterParam]?
+    const [result, fields] = await connection.query(sqlSelect, [genreFilterParam]);
     connection.end();
 
     if (result.length === 0) {
@@ -132,3 +129,12 @@ server.get("/movies", async (req, res)=>{
   };
 });
 
+//motor de plantillas
+server.get('/movie/:movieId',async (req, res)=>{
+  const {movieId} = req.params;
+  const connection = await connectDB();
+  const selectsql = 'SELECT * FROM movies WHERE idMovies = ?';
+  const [foundMovie] = await connection.query(selectsql,[movieId]);
+  console.log(foundMovie);
+  res.render('movie', {movie : foundMovie[0]});
+});
