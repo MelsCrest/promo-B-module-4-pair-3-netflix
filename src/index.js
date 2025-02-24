@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken"); 
 
 // create and config server
 const server = express();
@@ -137,4 +139,26 @@ server.get('/movie/:movieId',async (req, res)=>{
   const [foundMovie] = await connection.query(selectsql,[movieId]);
   console.log(foundMovie);
   res.render('movie', {movie : foundMovie[0]});
+});
+
+//registro
+server.post("/sign-up", async(req, res)=>{
+  const connection = await connectDB();
+  const {email, pass} = req.body;
+  const selectEmail = "SELECT email FROM users WHERE email = ?";
+  const [emailResult] = await connection.query(selectEmail, [email]);
+  if(emailResult.length === 0){
+    const passwordHashed = await bcrypt.hash(pass, 10);
+    const inserUser = "INSERT INTO users (password, email) VALUES (?, ?)";
+    const [result] = await connection.query(inserUser, [passwordHashed, email]);
+    res.status(201).json({
+      success: true,
+      userId: result.insertId
+    });
+  }else{
+    res.status(200).json({
+      success: false,
+      errorMessage: "Usuario ya existente"
+    });
+  }
 });
