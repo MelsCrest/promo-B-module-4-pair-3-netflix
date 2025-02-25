@@ -144,14 +144,15 @@ server.get('/movie/:movieId',async (req, res)=>{
 //registro
 server.post("/sign-up", async(req, res)=>{
   const connection = await connectDB();
-  const {email, pass} = req.body;
+  const {email, password} = req.body;
+  console.log(req.body);
   const selectEmail = "SELECT email FROM users WHERE email = ?";
   const [emailResult] = await connection.query(selectEmail, [email]);
   if(emailResult.length === 0){
-    const passwordHashed = await bcrypt.hash(pass, 10);
-    const inserUser = "INSERT INTO users (password, email) VALUES (?, ?)";
-    const [result] = await connection.query(inserUser, [passwordHashed, email]);
-    res.status(201).json({
+    const passwordHashed = await bcrypt.hash(password, 10);
+    const inserUser = "INSERT INTO users (email, password) VALUES (?, ?)";
+    const [result] = await connection.query(inserUser, [email, passwordHashed]);
+    res.status(200).json({
       success: true,
       userId: result.insertId
     });
